@@ -16,7 +16,7 @@ export default function TrainingCard({ training }: TrainingCardProps) {
       <Image
         source={{
           uri: training.photoUrl ??
-            'https://picsum.photos/seed/judolog/600/400',
+            'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/050907-M-7747B-002-Judo.jpg/1280px-050907-M-7747B-002-Judo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
         }}
         style={styles.photo}
         resizeMode="cover"
