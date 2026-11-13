@@ -1,5 +1,6 @@
 import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import EmptyState from '@/components/EmptyState';
 import TrainingCard from '@/components/TrainingCard';
 import { trainings } from '@/data/trainings';
 
@@ -38,6 +39,9 @@ export default function TrainingsScreen() {
         </View>
       }
       ListHeaderComponentStyle={styles.header}
+      ListEmptyComponent={
+        <EmptyState title="No trainings yet" message="Your trainings will appear here." />
+      }
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       contentContainerStyle={[
         styles.content,
@@ -53,6 +57,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   content: {
+    flexGrow: 1,
     padding: SCREEN_PADDING,
   },
   headerContent: {
