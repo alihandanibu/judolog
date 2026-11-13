@@ -15,18 +15,21 @@ Open the project in a compatible version of Expo Go.
 
 The project uses Expo SDK 58 to match the Expo Go version installed on the development iPhone. The Lab 4 handout specifies SDK 57.
 
-Training data currently comes from typed local mock data. Photos are placeholders.
+Training data comes from typed local mock data through a simulated API. Photos are placeholders. Deletion lasts until the list is refreshed or the app is reopened.
 
 ## Features
 
 - [x] Typed training session model
 - [x] Five mock training sessions
-- [x] Scrollable training list
+- [x] Virtualized training list with a scrolling summary and responsive one-, two-, and three-column layout
+- [x] Empty, loading, and error states with retry
+- [x] Pull-to-refresh, duration filters, and sorting by date or duration
+- [x] Long-press deletion with confirmation and accessible training cards
 - [x] Reusable cards with press feedback
 - [x] Training details component
 - [x] Session count and total duration
 - [ ] Dedicated training details route
-- [ ] Add, edit and delete sessions
+- [ ] Add and edit sessions
 - [ ] Trainings and Progress tabs
 - [ ] Local persistence
 - [ ] Camera or image picker

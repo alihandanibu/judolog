@@ -21,12 +21,19 @@ const CARD_GAP = 12;
 
 type LoadStatus = 'loading' | 'error' | 'ready';
 type DurationFilter = 'all' | 'under60' | '60to89' | '90plus';
+type SortOrder = 'original' | 'newest' | 'longest';
 
 const durationFilters: { value: DurationFilter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'under60', label: 'Under 60 min' },
   { value: '60to89', label: '60–89 min' },
   { value: '90plus', label: '90+ min' },
+];
+
+const sortOptions: { value: SortOrder; label: string }[] = [
+  { value: 'original', label: 'Original' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'longest', label: 'Longest' },
 ];
 
 function matchesDuration(duration: number, filter: DurationFilter) {
@@ -55,6 +62,7 @@ export default function TrainingsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState('');
   const [filter, setFilter] = useState<DurationFilter>('all');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('original');
 
   useEffect(() => {
     let ignore = false;
@@ -124,6 +132,18 @@ export default function TrainingsScreen() {
   const visibleTrainings = trainings.filter(
     (training) => matchesDuration(training.durationMinutes, filter),
   );
+  let displayedTrainings = visibleTrainings;
+
+  if (sortOrder === 'newest') {
+    displayedTrainings = [...visibleTrainings].sort((first, second) =>
+      second.date.localeCompare(first.date),
+    );
+  } else if (sortOrder === 'longest') {
+    displayedTrainings = [...visibleTrainings].sort((first, second) =>
+      second.durationMinutes - first.durationMinutes,
+    );
+  }
+
   const selectedFilterLabel = durationFilters.find((option) => option.value === filter)?.label;
 
   if (status === 'loading') {
@@ -153,7 +173,7 @@ export default function TrainingsScreen() {
       columnWrapperStyle={columns > 1 ? styles.row : undefined}
       style={styles.screen}
       contentInsetAdjustmentBehavior="never"
-      data={visibleTrainings}
+      data={displayedTrainings}
       refreshing={refreshing}
       onRefresh={refresh}
       keyExtractor={(training) => training.id}
@@ -177,6 +197,16 @@ export default function TrainingsScreen() {
                 label={label}
                 selected={filter === value}
                 onPress={() => setFilter(value)}
+              />
+            ))}
+          </View>
+          <View style={styles.chips}>
+            {sortOptions.map(({ value, label }) => (
+              <FilterChip
+                key={value}
+                label={label}
+                selected={sortOrder === value}
+                onPress={() => setSortOrder(value)}
               />
             ))}
           </View>
