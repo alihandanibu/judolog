@@ -1,11 +1,23 @@
-import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyState from '@/components/EmptyState';
 import TrainingCard from '@/components/TrainingCard';
-import { trainings } from '@/data/trainings';
+import { fetchTrainings } from '@/data/api';
+import type { TrainingSession } from '@/types';
 
 const SCREEN_PADDING = 16;
 const CARD_GAP = 12;
+
+type LoadStatus = 'loading' | 'error' | 'ready';
 
 export default function TrainingsScreen() {
   const insets = useSafeAreaInsets();
@@ -13,10 +25,66 @@ export default function TrainingsScreen() {
   const columns = width >= 900 ? 3 : width >= 600 ? 2 : 1;
   const cardWidth = (width - 2 * SCREEN_PADDING - (columns - 1) * CARD_GAP) / columns;
 
+  const [trainings, setTrainings] = useState<TrainingSession[]>([]);
+  const [status, setStatus] = useState<LoadStatus>('loading');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadTrainings() {
+      try {
+        const sessions = await fetchTrainings();
+
+        if (!ignore) {
+          setTrainings(sessions);
+          setStatus('ready');
+        }
+      } catch (error) {
+        if (!ignore) {
+          setErrorMessage(error instanceof Error ? error.message : 'Could not load trainings');
+          setStatus('error');
+        }
+      }
+    }
+
+    void loadTrainings();
+
+    return () => {
+      ignore = true;
+    };
+  }, [attempt]);
+
+  function retry() {
+    setStatus('loading');
+    setAttempt((previousAttempt) => previousAttempt + 1);
+  }
+
   const totalMinutes = trainings.reduce(
     (total, training) => total + training.durationMinutes,
     0,
   );
+
+  if (status === 'loading') {
+    return (
+      <View style={[styles.screen, styles.center]}>
+        <ActivityIndicator color="#1D4ED8" size="large" accessibilityLabel="Loading trainings" />
+        <Text style={styles.summary}>Loading trainings…</Text>
+      </View>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <View style={[styles.screen, styles.center]}>
+        <Text accessibilityRole="alert" style={styles.summary}>{errorMessage}</Text>
+        <Pressable accessibilityRole="button" onPress={retry} style={styles.retryButton}>
+          <Text style={styles.retryText}>Try again</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -55,6 +123,22 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  center: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    padding: SCREEN_PADDING,
+  },
+  retryButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#1D4ED8',
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   content: {
     flexGrow: 1,
