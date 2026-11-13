@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyState from '@/components/EmptyState';
+import FilterChip from '@/components/FilterChip';
 import TrainingCard from '@/components/TrainingCard';
 import { fetchTrainings } from '@/data/api';
 import type { TrainingSession } from '@/types';
@@ -18,6 +19,27 @@ const SCREEN_PADDING = 16;
 const CARD_GAP = 12;
 
 type LoadStatus = 'loading' | 'error' | 'ready';
+type DurationFilter = 'all' | 'under60' | '60to89' | '90plus';
+
+const durationFilters: { value: DurationFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'under60', label: 'Under 60 min' },
+  { value: '60to89', label: '60–89 min' },
+  { value: '90plus', label: '90+ min' },
+];
+
+function matchesDuration(duration: number, filter: DurationFilter) {
+  switch (filter) {
+    case 'all':
+      return true;
+    case 'under60':
+      return duration < 60;
+    case '60to89':
+      return duration >= 60 && duration < 90;
+    case '90plus':
+      return duration >= 90;
+  }
+}
 
 export default function TrainingsScreen() {
   const insets = useSafeAreaInsets();
@@ -31,6 +53,7 @@ export default function TrainingsScreen() {
   const [attempt, setAttempt] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState('');
+  const [filter, setFilter] = useState<DurationFilter>('all');
 
   useEffect(() => {
     let ignore = false;
@@ -84,6 +107,11 @@ export default function TrainingsScreen() {
     0,
   );
 
+  const visibleTrainings = trainings.filter(
+    (training) => matchesDuration(training.durationMinutes, filter),
+  );
+  const selectedFilterLabel = durationFilters.find((option) => option.value === filter)?.label;
+
   if (status === 'loading') {
     return (
       <View style={[styles.screen, styles.center]}>
@@ -111,7 +139,7 @@ export default function TrainingsScreen() {
       columnWrapperStyle={columns > 1 ? styles.row : undefined}
       style={styles.screen}
       contentInsetAdjustmentBehavior="never"
-      data={trainings}
+      data={visibleTrainings}
       refreshing={refreshing}
       onRefresh={refresh}
       keyExtractor={(training) => training.id}
@@ -124,6 +152,16 @@ export default function TrainingsScreen() {
           <Text style={styles.summary}>
             {trainings.length} sessions · {totalMinutes} minutes
           </Text>
+          <View style={styles.chips}>
+            {durationFilters.map(({ value, label }) => (
+              <FilterChip
+                key={value}
+                label={label}
+                selected={filter === value}
+                onPress={() => setFilter(value)}
+              />
+            ))}
+          </View>
           {refreshError !== '' && (
             <Text accessibilityRole="alert" style={styles.refreshError}>{refreshError}</Text>
           )}
@@ -131,7 +169,10 @@ export default function TrainingsScreen() {
       }
       ListHeaderComponentStyle={styles.header}
       ListEmptyComponent={
-        <EmptyState title="No trainings yet" message="Your trainings will appear here." />
+        <EmptyState
+          title={filter === 'all' ? 'No trainings yet' : 'No trainings for ' + selectedFilterLabel}
+          message={filter === 'all' ? 'Your trainings will appear here.' : 'Choose another duration.'}
+        />
       }
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       contentContainerStyle={[
@@ -180,6 +221,11 @@ const styles = StyleSheet.create({
   },
   summary: {
     color: '#475569',
+  },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   refreshError: {
     color: '#9F1239',
