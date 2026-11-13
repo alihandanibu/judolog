@@ -1,17 +1,19 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import type { TrainingSession } from '@/types';
 
 type TrainingCardProps = {
   training: TrainingSession;
+  style?: StyleProp<ViewStyle>;
 };
 
-export default function TrainingCard({ training }: TrainingCardProps) {
+export default function TrainingCard({ training, style }: TrainingCardProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Open ${training.title}`}
       onPress={() => console.log('Open', training.id)}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, style, pressed && styles.pressed]}
     >
       <Image
         source={{
