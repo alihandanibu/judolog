@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -102,6 +103,19 @@ export default function TrainingsScreen() {
     }
   }
 
+  function confirmDelete(training: TrainingSession) {
+    Alert.alert('Delete training?', `"${training.title}" will be removed.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => setTrainings(
+          (sessions) => sessions.filter((session) => session.id !== training.id),
+        ),
+      },
+    ]);
+  }
+
   const totalMinutes = trainings.reduce(
     (total, training) => total + training.durationMinutes,
     0,
@@ -144,7 +158,11 @@ export default function TrainingsScreen() {
       onRefresh={refresh}
       keyExtractor={(training) => training.id}
       renderItem={({ item }) => (
-        <TrainingCard training={item} style={{ width: cardWidth }} />
+        <TrainingCard
+          training={item}
+          style={{ width: cardWidth }}
+          onLongPress={() => confirmDelete(item)}
+        />
       )}
       ListHeaderComponent={
         <View style={styles.headerContent}>

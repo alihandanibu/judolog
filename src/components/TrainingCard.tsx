@@ -5,13 +5,17 @@ import type { TrainingSession } from '@/types';
 type TrainingCardProps = {
   training: TrainingSession;
   style?: StyleProp<ViewStyle>;
+  onLongPress?: () => void;
 };
 
-export default function TrainingCard({ training, style }: TrainingCardProps) {
+export default function TrainingCard({ training, style, onLongPress }: TrainingCardProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Open ${training.title}`}
+      accessibilityLabel={`${training.title}, ${training.date}, ${training.durationMinutes} minutes. Techniques: ${training.techniques.join(", ")}.`}
+      accessibilityHint={onLongPress ? 'Long press to delete' : undefined}
+      onLongPress={onLongPress}
+      android_ripple={{ color: '#CBD5E1' }}
       onPress={() => console.log('Open', training.id)}
       style={({ pressed }) => [styles.card, style, pressed && styles.pressed]}
     >
