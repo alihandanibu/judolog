@@ -29,6 +29,8 @@ export default function TrainingsScreen() {
   const [status, setStatus] = useState<LoadStatus>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState('');
 
   useEffect(() => {
     let ignore = false;
@@ -59,6 +61,22 @@ export default function TrainingsScreen() {
   function retry() {
     setStatus('loading');
     setAttempt((previousAttempt) => previousAttempt + 1);
+  }
+
+  async function refresh() {
+    if (refreshing) return;
+
+    setRefreshing(true);
+    setRefreshError('');
+
+    try {
+      const sessions = await fetchTrainings();
+      setTrainings(sessions);
+    } catch {
+      setRefreshError('Could not refresh trainings. Pull down to try again.');
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   const totalMinutes = trainings.reduce(
@@ -94,6 +112,8 @@ export default function TrainingsScreen() {
       style={styles.screen}
       contentInsetAdjustmentBehavior="never"
       data={trainings}
+      refreshing={refreshing}
+      onRefresh={refresh}
       keyExtractor={(training) => training.id}
       renderItem={({ item }) => (
         <TrainingCard training={item} style={{ width: cardWidth }} />
@@ -104,6 +124,9 @@ export default function TrainingsScreen() {
           <Text style={styles.summary}>
             {trainings.length} sessions · {totalMinutes} minutes
           </Text>
+          {refreshError !== '' && (
+            <Text accessibilityRole="alert" style={styles.refreshError}>{refreshError}</Text>
+          )}
         </View>
       }
       ListHeaderComponentStyle={styles.header}
@@ -157,6 +180,9 @@ const styles = StyleSheet.create({
   },
   summary: {
     color: '#475569',
+  },
+  refreshError: {
+    color: '#9F1239',
   },
   row: {
     gap: CARD_GAP,
